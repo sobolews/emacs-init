@@ -75,7 +75,7 @@
  '(font-lock-string-face ((t (:foreground "#FF00969C969C"))))
  '(font-lock-type-face ((((class color) (min-colors 88) (background dark)) (:foreground "LightSkyBlue"))))
  '(font-lock-variable-name-face ((t (:foreground "#E5F5EEEE8282"))))
- '(font-lock-warning-face ((((class color) (min-colors 88) (background dark)) (:foreground "Pink" :underline "firebrick2" :weight bold))))
+ '(font-lock-warning-face ((((class color) (min-colors 88) (background dark)) (:foreground "DarkGreen" :underline "firebrick2" :weight bold))))
  '(fringe ((t (:inherit default))))
  '(hc-tab ((t (:box (:line-width -2 :color "#323A323A43E7")))))
  '(hc-trailing-whitespace ((t (:background "#1f1f2f"))))
@@ -90,7 +90,7 @@
  '(mode-line ((((class color) (min-colors 88)) (:background "gray70" :foreground "black" :box (:line-width -1 :style released-button)))))
  '(mode-line-inactive ((t (:inherit mode-line :background "gray30" :foreground "grey80"))))
  '(python-self ((t (:inherit default :foreground "#FF6CE5D4FC69"))))
- '(region ((((class color) (min-colors 88) (background dark)) (:background "#2A2A3F"))))
+ '(region ((((class color) (min-colors 88) (background dark)) (:background "#2F2F50"))))
  '(scroll-bar ((t (:background "red"))))
  '(show-paren-match ((((class color) (background dark)) (:background "pink" :foreground "black" :weight bold))))
  '(sml-modeline-end-face ((t (:inherit match :background "grey40"))))
@@ -478,9 +478,9 @@ signalled."
 (setq python-shell-interpreter "/usr/bin/env python")
 (setq python-python-command "/usr/bin/env python")
 
-(defun python-do-doctest () (interactive)
-  (insert "import doctest; doctest.testmod()"))
-(global-set-key (kbd "C-z d") 'python-do-doctest)
+(defun python-if-debug () (interactive)
+  (insert "if __debug__: "))
+(global-set-key (kbd "C-z d") 'python-if-debug)
 
 ;; Make "self" not be highlighted
 (setq python-font-lock-keywords
@@ -507,11 +507,8 @@ signalled."
     4]
   (1 font-lock-variable-name-face nil nil))))
 
-(add-hook 'python-mode-hook
-          (lambda () (interactive)
-            (modify-syntax-entry ?_ "w")))
 (font-lock-add-keywords 'python-mode
-    '(("\\<\\(self\\)\\>" . 'python-self)))
+    '(("[^_0-9a-zA-Z]\\(self\\)[^_0-9a-zA-Z]" 1 'python-self)))
 
 ;;  SQL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun oracle-select-star-from () (interactive)
@@ -666,7 +663,6 @@ See URL `http://clang.llvm.org/'."
         save-some-buffers
         scroll-up-3-line
         skeleton-pair-insert-maybe
-        temphack-prevline
         upcase-region
         xah-copy-line-or-region
         xah-cut-line-or-region
@@ -746,12 +742,6 @@ See URL `http://clang.llvm.org/'."
   (insert (number-to-string (random 999999))) )
 
 ;;  SANDBOX  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun evil-hack-prevline () (interactive)
-  (let (pos) (setq pos (funcall 'current-column))
-  (beginning-of-line) (backward-char)
-  (move-to-column pos)))
-(global-set-key (kbd "C-p") 'evil-hack-prevline)
 
 (defun reload-buffer () (interactive)
   (let (pos) (setq pos (funcall 'current-line))
@@ -877,19 +867,6 @@ See URL `http://clang.llvm.org/'."
 
 (setq create-lockfiles nil)
 
-(global-set-key (kbd "M-f") '(lambda ()
- (interactive)
- (with-syntax-table text-mode-syntax-table (forward-word))))
-(global-set-key (kbd "M-b") '(lambda ()
- (interactive)
- (with-syntax-table text-mode-syntax-table (backward-word))))
-(global-set-key (kbd "<M-backspace>") '(lambda ()
- (interactive)
- (with-syntax-table text-mode-syntax-table (backward-kill-word 1))))
-(global-set-key (kbd "M-d") '(lambda ()
- (interactive)
- (with-syntax-table text-mode-syntax-table (kill-word 1))))
-
 (defun toggle-window-dedicated ()
 "Toggle whether the current active window is dedicated or not"
 (interactive)
@@ -910,7 +887,7 @@ See URL `http://clang.llvm.org/'."
 With argument, do this that many times.
 This command does not push erased text to kill-ring."
   (interactive "p")
-  (delete-region (point) (progn (forward-word arg) (point))))
+  (delete-region (point) (progn (subword-forward arg) (point))))
 
 (defun my-backward-delete-word (arg)
   "Delete characters backward until encountering the beginning of a word.
@@ -976,7 +953,10 @@ This command does not push erased text to kill-ring."
 (hideshowvis-symbols)
 (global-set-key (kbd "s-p") (lambda () (interactive) (search-backward-regexp "^class")))
 
+(global-subword-mode 1)
+(require 'view)
+(global-set-key (kbd "C-v") 'View-scroll-half-page-forward)
+(global-set-key (kbd "M-v") 'View-scroll-half-page-backward)
 
 ;;  END  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (provide '.emacs)
-;;; .emacs ends here
